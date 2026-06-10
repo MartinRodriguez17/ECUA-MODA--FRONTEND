@@ -10,6 +10,9 @@ import '../services/auth_service.dart';
 import '../services/order_service.dart';
 import '../main_wrapper.dart';
 import 'admin_panel_screen.dart'; // <-- IMPORTAMOS LA PANTALLA DEL PANEL DE CONTROL, aunque no se vea en el menú normal
+import 'upload_product_screen.dart';
+import 'my_products_screen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -38,7 +41,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _cargarDatosCompletos() async {
     try {
       final datos = await _authService.obtenerDatosPerfil();
-      final pedidos = await _orderService.obtenerHistorialPedidos();
+      List<dynamic> pedidos = [];
+
+      // Solo cargamos pedidos si es cliente normal
+      if (datos['rol'] == 'cliente') {
+        pedidos = await _orderService.obtenerHistorialPedidos();
+      }
 
       if (mounted) {
         setState(() {
@@ -169,7 +177,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               setModalState(() => guardando = true);
                               try {
                                 await _authService.actualizarPerfil(
-                                  nombre: nombreController.text.trim(),
+                                  // 👇 Solo manda el nombre si realmente cambió
+                                  nombre:
+                                      nombreController.text.trim() !=
+                                          _datosUsuario?['nombre']
+                                      ? nombreController.text.trim()
+                                      : null,
                                   fotoBytes: nuevaFotoBytes,
                                   nombreArchivo: nuevoNombreArchivo,
                                 );
@@ -225,6 +238,186 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Colors.green;
     if (estado.toLowerCase().contains('rechazado')) return Colors.red;
     return Colors.grey;
+  }
+
+  Widget _buildHistorialPedidos() {
+    return _misPedidos.isEmpty
+        ? const Center(
+            child: Text(
+              'Aún no has comprado nada bro 💨',
+              style: TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            itemCount: _misPedidos.length,
+            itemBuilder: (context, index) {
+              final pedido = _misPedidos[index];
+              final estado = pedido['estado'] ?? 'Desconocido';
+              final fechaRaw = pedido['fechaCreacion'];
+              final fecha = fechaRaw != null
+                  ? DateTime.parse(
+                      fechaRaw.toString(),
+                    ).toLocal().toString().split('.')[0]
+                  : 'Fecha desconocida';
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Orden #${pedido['_id'].toString().substring(18)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            '\$${pedido['total']}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Fecha: $fecha',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _obtenerColorEstado(estado).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _obtenerColorEstado(estado),
+                          ),
+                        ),
+                        child: Text(
+                          estado.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _obtenerColorEstado(estado),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+  }
+
+  //Distiguir Vendedor de Comprador
+  Widget _buildPanelVendedor() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          // Botón subir producto
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.add_a_photo),
+              label: const Text(
+                'SUBIR NUEVO PRODUCTO',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UploadProductScreen(),
+                  ),
+                ).then((_) => _cargarDatosCompletos());
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Botón ver mis productos
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.black),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.inventory_2_outlined),
+              label: const Text(
+                'VER MIS PRODUCTOS',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyProductsScreen()),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Botón ver ventas
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.black),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.bar_chart_outlined),
+              label: const Text(
+                'MIS VENTAS',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                // Aquí irá la pantalla de ventas
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -306,154 +499,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 15),
 
                         // BOTÓN PARA ABRIR LA EDICIÓN
-                            OutlinedButton.icon(
-                              onPressed: _mostrarModalEdicion,
-                              icon: const Icon(Icons.edit, size: 18),
-                              label: const Text('Editar Perfil'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.black,
-                                side: const BorderSide(color: Colors.black),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+                        OutlinedButton.icon(
+                          onPressed: _mostrarModalEdicion,
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Editar Perfil'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.black,
+                            side: const BorderSide(color: Colors.black),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // --- EL BOTÓN FANTASMA DEL ADMIN ---
+                        // Solo se dibuja si el rol es 'admin' o 'marca'
+                        if (_datosUsuario?['rol'] == 'admin')
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // ¡EL VIAJE AL CUARTEL GENERAL!
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AdminPanelScreen(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.admin_panel_settings),
+                            label: const Text('PANEL DE CONTROL'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade800,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
                               ),
                             ),
-                            const SizedBox(height: 10),
-
-                            // --- EL BOTÓN FANTASMA DEL ADMIN ---
-                            // Solo se dibuja si el rol es 'admin' o 'marca'
-                            if (_datosUsuario?['rol'] == 'admin' || _datosUsuario?['rol'] == 'marca')
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  // ¡EL VIAJE AL CUARTEL GENERAL!
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
-                                  );
-                                },
-                                icon: const Icon(Icons.admin_panel_settings),
-                                label: const Text('PANEL DE CONTROL'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue.shade800,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-                                ),
-                              ),
+                          ),
 
                         const SizedBox(height: 20),
                         const Divider(thickness: 1, color: Colors.black12),
                         const SizedBox(height: 10),
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Mis Compras 📦',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
+                        // Contenido según el rol
+                        if (_datosUsuario?['rol'] == 'cliente') ...[
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 24.0),
+                              child: Text(
+                                'Mis Compras 📦',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ] else if (_datosUsuario?['rol'] == 'marca') ...[
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 24.0),
+                              child: Text(
+                                'Mi Tienda 🏪',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-
                   Expanded(
-                    child: _misPedidos.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Aún no has comprado nada bro 💨',
-                              style: TextStyle(
-                                color: Colors.black54,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24.0,
-                            ),
-                            itemCount: _misPedidos.length,
-                            itemBuilder: (context, index) {
-                              final pedido = _misPedidos[index];
-                              final estado = pedido['estado'] ?? 'Desconocido';
-                              final fechaRaw = pedido['fechaCreacion'];
-                              final fecha = fechaRaw != null
-                                  ? DateTime.parse(
-                                      fechaRaw.toString(),
-                                    ).toLocal().toString().split('.')[0]
-                                  : 'Fecha desconocida';
-
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                elevation: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'Orden #${pedido['_id'].toString().substring(18)}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$${pedido['total']}',
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Fecha: $fecha',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _obtenerColorEstado(
-                                            estado,
-                                          ).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: _obtenerColorEstado(estado),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          estado.toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: _obtenerColorEstado(estado),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                    child: _datosUsuario?['rol'] == 'marca'
+                        ? _buildPanelVendedor()
+                        : _buildHistorialPedidos(),
                   ),
                 ],
               ),
