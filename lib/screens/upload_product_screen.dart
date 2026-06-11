@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import 'dart:convert';
 
 class UploadProductScreen extends StatefulWidget {
   final dynamic productoEditar;
@@ -27,9 +29,10 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
       _categoriaSeleccionada = p['categoria'];
       _estiloSeleccionado = p['estilo'];
       _generoSeleccionado = p['genero'];
-      _stock = p['stock'] ?? 1;
       if (p['tallas'] != null) {
-        _tallasSeleccionadas.addAll(List<String>.from(p['tallas']));
+        for (var t in p['tallas']) {
+          _tallaStockMap[t['talla']] = t['stock'] ?? 1;
+        }
       }
     }
   }
@@ -41,9 +44,8 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
   final TextEditingController _descripcionController = TextEditingController();
   final TextEditingController _marcaController = TextEditingController();
 
-  int _stock = 1;
   final List<String> _tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  final List<String> _tallasSeleccionadas = [];
+  final Map<String, int> _tallaStockMap = {}; // {'S': 3, 'M': 5, ...}
 
   // --- DROPDOWNS ---
   String? _categoriaSeleccionada;
@@ -84,15 +86,16 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
 
   // --- MÚLTIPLES IMÁGENES (máx 4) ---
   final List<XFile> _imagenesSeleccionadas = [];
+  final List<Uint8List> _imagenesBytes = []; // para preview en web
   final ImagePicker _picker = ImagePicker();
   bool _estaCargando = false;
 
   Future<void> _agregarImagen() async {
-    if (_imagenesSeleccionadas.isEmpty && widget.productoEditar == null) {
+    if (_imagenesSeleccionadas.length >= 4) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bro, agrega al menos una foto 📸'),
-          backgroundColor: Colors.red,
+          content: Text('Máximo 4 fotos por prenda 📸'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -104,8 +107,10 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
     );
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes(); // 👈 leemos bytes siempre
       setState(() {
         _imagenesSeleccionadas.add(pickedFile);
+        _imagenesBytes.add(bytes);
       });
     }
   }
@@ -113,6 +118,7 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
   void _eliminarImagen(int index) {
     setState(() {
       _imagenesSeleccionadas.removeAt(index);
+      _imagenesBytes.removeAt(index);
     });
   }
 
@@ -158,7 +164,7 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
       );
       return;
     }
-    if (_tallasSeleccionadas.isEmpty) {
+    if (_tallaStockMap.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Selecciona al menos una talla 🛑'),
@@ -196,9 +202,11 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
       request.fields['estilo'] = _estiloSeleccionado!;
       request.fields['genero'] = _generoSeleccionado!;
       request.fields['marca'] = _marcaController.text.trim();
-      request.fields['stock'] = _stock.toString();
-      // Mandamos las tallas como JSON array
-      request.fields['tallas'] = _tallasSeleccionadas.join(',');
+      request.fields['tallas'] = jsonEncode(
+        _tallaStockMap.entries
+            .map((e) => {'talla': e.key, 'stock': e.value})
+            .toList(),
+      );
 
       // Subimos todas las imágenes
       for (final imagen in _imagenesSeleccionadas) {
@@ -292,15 +300,11 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: kIsWeb
-                                  ? Image.network(
-                                      imagen.path,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      File(imagen.path),
-                                      fit: BoxFit.cover,
-                                    ),
+                              child: Image.memory(
+                                // 👈 siempre Image.memory con los bytes
+                                _imagenesBytes[index],
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           Positioned(
@@ -463,79 +467,129 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
               ),
               const SizedBox(height: 30),
 
-              // --- TALLAS ---
+              // --- TALLAS CON STOCK ---
               const Text(
-                'Tallas disponibles',
+                'Tallas y stock',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
+              Column(
                 children: _tallasDisponibles.map((talla) {
-                  final seleccionada = _tallasSeleccionadas.contains(talla);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (seleccionada) {
-                          _tallasSeleccionadas.remove(talla);
-                        } else {
-                          _tallasSeleccionadas.add(talla);
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: seleccionada ? Colors.black : Colors.white,
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        talla,
-                        style: TextStyle(
-                          color: seleccionada ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
+                  final seleccionada = _tallaStockMap.containsKey(talla);
+                  return Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (seleccionada) {
+                              _tallaStockMap.remove(talla);
+                            } else {
+                              _tallaStockMap[talla] = 1;
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: seleccionada ? Colors.black : Colors.white,
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                talla,
+                                style: TextStyle(
+                                  color: seleccionada
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Icon(
+                                seleccionada
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                color: seleccionada
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                      // Panel de stock que se desliza
+                      AnimatedCrossFade(
+                        duration: const Duration(milliseconds: 250),
+                        crossFadeState: seleccionada
+                            ? CrossFadeState.showSecond
+                            : CrossFadeState.showFirst,
+                        firstChild: const SizedBox.shrink(),
+                        secondChild: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(8),
+                              bottomRight: Radius.circular(8),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Stock talla $talla',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => setState(() {
+                                      if ((_tallaStockMap[talla] ?? 1) > 1) {
+                                        _tallaStockMap[talla] =
+                                            (_tallaStockMap[talla] ?? 1) - 1;
+                                      }
+                                    }),
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${_tallaStockMap[talla] ?? 1}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => setState(() {
+                                      _tallaStockMap[talla] =
+                                          (_tallaStockMap[talla] ?? 1) + 1;
+                                    }),
+                                    icon: const Icon(Icons.add_circle_outline),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   );
                 }).toList(),
-              ),
-              const SizedBox(height: 24),
-
-              // --- STOCK ---
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Stock disponible',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => setState(() {
-                          if (_stock > 1) _stock--;
-                        }),
-                        icon: const Icon(Icons.remove_circle_outline),
-                      ),
-                      Text(
-                        '$_stock',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => setState(() => _stock++),
-                        icon: const Icon(Icons.add_circle_outline),
-                      ),
-                    ],
-                  ),
-                ],
               ),
               const SizedBox(height: 16),
 
