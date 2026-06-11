@@ -12,6 +12,7 @@ import '../main_wrapper.dart';
 import 'admin_panel_screen.dart'; // <-- IMPORTAMOS LA PANTALLA DEL PANEL DE CONTROL, aunque no se vea en el menú normal
 import 'upload_product_screen.dart';
 import 'my_products_screen.dart';
+import 'mis_ventas_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -232,12 +233,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Color _obtenerColorEstado(String estado) {
-    if (estado.toLowerCase().contains('pendiente')) return Colors.orange;
-    if (estado.toLowerCase().contains('aprobado') ||
-        estado.toLowerCase().contains('completado'))
-      return Colors.green;
-    if (estado.toLowerCase().contains('rechazado')) return Colors.red;
-    return Colors.grey;
+    switch (estado.toLowerCase()) {
+      case 'aprobado':
+        return Colors.amber;
+      case 'rechazado':
+        return Colors.red;
+      case 'entregado':
+        return Colors.green;
+      default:
+        return Colors.blue; // Pendiente Verificación
+    }
   }
 
   Widget _buildHistorialPedidos() {
@@ -411,7 +416,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               onPressed: () {
-                // Aquí irá la pantalla de ventas
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MisVentasScreen()),
+                );
               },
             ),
           ),
