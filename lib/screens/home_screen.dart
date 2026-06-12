@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../services/cart_provider.dart';
 import 'cart_screen.dart';
 import 'upload_product_screen.dart'; // Esta será tu nueva pantalla
+import 'admin_login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> productosFiltrados = [];
   final TextEditingController _searchController = TextEditingController();
+
+  int _tapsLogo = 0;
+  DateTime? _ultimoTap;
 
   @override
   void initState() {
@@ -92,10 +96,29 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         elevation: 0.5,
         leadingWidth: 56,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ClipOval(
-            child: Image.asset('../asset/img/logo.png', fit: BoxFit.cover),
+        leading: GestureDetector(
+          onTap: () {
+            final ahora = DateTime.now();
+            if (_ultimoTap == null ||
+                ahora.difference(_ultimoTap!) > const Duration(seconds: 2)) {
+              _tapsLogo = 0;
+            }
+            _ultimoTap = ahora;
+            _tapsLogo++;
+
+            if (_tapsLogo >= 3) {
+              _tapsLogo = 0;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+              );
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ClipOval(
+              child: Image.asset('../asset/img/logo.png', fit: BoxFit.cover),
+            ),
           ),
         ),
         title: _buscandoActivo

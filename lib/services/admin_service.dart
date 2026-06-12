@@ -18,16 +18,13 @@ class AdminService {
 
       final response = await http.get(
         Uri.parse('$_baseUrl/todos'),
-        headers: {
-          'Content-Type': 'application/json', 
-          'x-auth-token': token
-        },
+        headers: {'Content-Type': 'application/json', 'x-auth-token': token},
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return data; 
+        return data;
       } else {
         throw data['msg'] ?? 'Error al cargar el panel maestro';
       }
@@ -38,7 +35,10 @@ class AdminService {
   }
 
   // --- APROBAR O RECHAZAR UN PEDIDO ---
-  Future<void> actualizarEstadoPedido(String pedidoId, String nuevoEstado) async {
+  Future<void> actualizarEstadoPedido(
+    String pedidoId,
+    String nuevoEstado,
+  ) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('jwt_token');
@@ -47,19 +47,124 @@ class AdminService {
 
       final response = await http.put(
         Uri.parse('$_baseUrl/$pedidoId/estado'),
-        headers: {
-          'Content-Type': 'application/json', 
-          'x-auth-token': token
-        },
+        headers: {'Content-Type': 'application/json', 'x-auth-token': token},
         body: jsonEncode({'estado': nuevoEstado}),
       );
 
       if (response.statusCode == 200) {
-        return; 
+        return;
       } else {
         final data = jsonDecode(response.body);
         throw data['msg'] ?? 'Error al cambiar estado';
       }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión bro 😅';
+    }
+  }
+
+  final String _baseUrlAuth = 'http://localhost:4000/api/auth';
+
+  // --- OBTENER TODOS LOS USUARIOS ---
+  Future<Map<String, dynamic>> obtenerTodosUsuarios() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+      if (token == null) throw 'No tienes sesión bro';
+
+      final response = await http.get(
+        Uri.parse('$_baseUrlAuth/admin/usuarios'),
+        headers: {'x-auth-token': token},
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw data['msg'] ?? 'Error al obtener usuarios';
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión bro 😅';
+    }
+  }
+
+  // --- CAMBIAR ESTADO DE USUARIO ---
+  Future<void> cambiarEstadoUsuario(
+    String tipo,
+    String id,
+    String estado,
+  ) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+      if (token == null) throw 'No tienes sesión bro';
+
+      final response = await http.put(
+        Uri.parse('$_baseUrlAuth/admin/usuarios/$tipo/$id/estado'),
+        headers: {'Content-Type': 'application/json', 'x-auth-token': token},
+        body: jsonEncode({'estado': estado}),
+      );
+
+      if (response.statusCode != 200) {
+        final data = jsonDecode(response.body);
+        throw data['msg'] ?? 'Error al cambiar estado';
+      }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión bro 😅';
+    }
+  }
+
+  final String _baseUrlProductos = 'http://localhost:4000/api/productos';
+  
+  Future<List<dynamic>> obtenerTodosProductosAdmin() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/Productos/admin/todos'),
+        headers: {'x-auth-token': token ?? ''},
+      );
+
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      throw 'Error al obtener productos';
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión bro 😅';
+    }
+  }
+
+  Future<void> ocultarProducto(String id, bool oculto) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+
+      final response = await http.put(
+        Uri.parse('$_baseUrl/Productos/admin/$id/ocultar'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token ?? '',
+        },
+        body: jsonEncode({'oculto': oculto}),
+      );
+
+      if (response.statusCode != 200) throw 'Error al ocultar producto';
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión bro 😅';
+    }
+  }
+
+  Future<void> eliminarProductoAdmin(String id) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/Productos/$id'),
+        headers: {'x-auth-token': token ?? ''},
+      );
+
+      if (response.statusCode != 200) throw 'Error al eliminar producto';
     } catch (e) {
       if (e is String) throw e;
       throw 'Error de conexión bro 😅';
