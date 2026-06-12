@@ -132,6 +132,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   Future<void> _cargarTodosProductos() async {
     try {
       final productos = await _adminService.obtenerTodosProductosAdmin();
+      print('Productos admin: ${productos.length}');
       if (mounted) {
         setState(() {
           _todosProductos = productos;
@@ -139,6 +140,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
         });
       }
     } catch (e) {
+      print('Error productos admin: $e');
       if (mounted) setState(() => _cargandoProductos = false);
     }
   }

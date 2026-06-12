@@ -114,16 +114,18 @@ class AdminService {
   }
 
   final String _baseUrlProductos = 'http://localhost:4000/api/productos';
-  
+
   Future<List<dynamic>> obtenerTodosProductosAdmin() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('jwt_token');
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/Productos/admin/todos'),
+        Uri.parse('http://localhost:4000/api/productos/admin/todos'),
         headers: {'x-auth-token': token ?? ''},
       );
+      print('Status productos: ${response.statusCode}');
+      print('Body: ${response.body.substring(0, 100)}');
 
       if (response.statusCode == 200) return jsonDecode(response.body);
       throw 'Error al obtener productos';
@@ -138,14 +140,20 @@ class AdminService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('jwt_token');
 
+      final url = '$_baseUrlProductos/admin/$id/ocultar';
+      print('URL ocultar: $url');
+
       final response = await http.put(
-        Uri.parse('$_baseUrl/Productos/admin/$id/ocultar'),
+        Uri.parse('$_baseUrlProductos/admin/$id/ocultar'), 
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token ?? '',
         },
         body: jsonEncode({'oculto': oculto}),
       );
+
+      print('Status ocultar: ${response.statusCode}'); 
+      print('Body ocultar: ${response.body}'); 
 
       if (response.statusCode != 200) throw 'Error al ocultar producto';
     } catch (e) {
@@ -160,7 +168,7 @@ class AdminService {
       String? token = prefs.getString('jwt_token');
 
       final response = await http.delete(
-        Uri.parse('$_baseUrl/Productos/$id'),
+        Uri.parse('$_baseUrlProductos/$id'), // 👈 corregido
         headers: {'x-auth-token': token ?? ''},
       );
 
