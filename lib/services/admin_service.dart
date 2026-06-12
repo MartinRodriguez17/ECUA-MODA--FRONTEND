@@ -90,22 +90,48 @@ class AdminService {
   Future<void> cambiarEstadoUsuario(
     String tipo,
     String id,
-    String estado,
-  ) async {
+    String estado, {
+    String motivo = '',
+    int? dias,
+  }) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+      if (token == null) throw 'No tienes sesión bro';
+
+      final body = <String, dynamic>{'estado': estado, 'motivo': motivo};
+      if (dias != null) body['dias'] = dias;
+
+      final response = await http.put(
+        Uri.parse('$_baseUrlAuth/admin/usuarios/$tipo/$id/estado'),
+        headers: {'Content-Type': 'application/json', 'x-auth-token': token},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200) {
+        final data = jsonDecode(response.body);
+        throw data['msg'] ?? 'Error al cambiar estado';
+      }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión bro 😅';
+    }
+  }
+
+  Future<void> aceptarMarca(String id) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('jwt_token');
       if (token == null) throw 'No tienes sesión bro';
 
       final response = await http.put(
-        Uri.parse('$_baseUrlAuth/admin/usuarios/$tipo/$id/estado'),
-        headers: {'Content-Type': 'application/json', 'x-auth-token': token},
-        body: jsonEncode({'estado': estado}),
+        Uri.parse('$_baseUrlAuth/admin/marcas/$id/aceptar'),
+        headers: {'x-auth-token': token},
       );
 
       if (response.statusCode != 200) {
         final data = jsonDecode(response.body);
-        throw data['msg'] ?? 'Error al cambiar estado';
+        throw data['msg'] ?? 'Error al aceptar marca';
       }
     } catch (e) {
       if (e is String) throw e;
@@ -144,7 +170,7 @@ class AdminService {
       print('URL ocultar: $url');
 
       final response = await http.put(
-        Uri.parse('$_baseUrlProductos/admin/$id/ocultar'), 
+        Uri.parse('$_baseUrlProductos/admin/$id/ocultar'),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token ?? '',
@@ -152,8 +178,8 @@ class AdminService {
         body: jsonEncode({'oculto': oculto}),
       );
 
-      print('Status ocultar: ${response.statusCode}'); 
-      print('Body ocultar: ${response.body}'); 
+      print('Status ocultar: ${response.statusCode}');
+      print('Body ocultar: ${response.body}');
 
       if (response.statusCode != 200) throw 'Error al ocultar producto';
     } catch (e) {
