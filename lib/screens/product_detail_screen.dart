@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/cart_provider.dart';
+import '../services/resena_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final dynamic producto;
@@ -150,6 +151,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  FutureBuilder<List<dynamic>>(
+                    future: ResenaService().obtenerResenasMarca(
+                      widget.producto['marcaId']?.toString() ?? '',
+                    ),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Text(
+                          'Sin calificaciones aún',
+                          style: TextStyle(fontSize: 12, color: Colors.black38),
+                        );
+                      }
+                      final resenas = snapshot.data!;
+                      final promedio =
+                          resenas.fold<double>(
+                            0,
+                            (sum, r) => sum + (r['estrellas'] ?? 0),
+                          ) /
+                          resenas.length;
+                      return Row(
+                        children: [
+                          ...List.generate(
+                            5,
+                            (index) => Icon(
+                              index < promedio.round()
+                                  ? Icons.star
+                                  : Icons.star_outline,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${promedio.toStringAsFixed(1)} (${resenas.length})',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
 
                   // --- TALLAS REALES ---
                   const Text(

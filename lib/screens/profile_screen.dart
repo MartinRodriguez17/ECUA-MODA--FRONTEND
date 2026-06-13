@@ -2,6 +2,8 @@
 // Esta pantalla es el perfil del usuario. Por ahora es un placeholder,
 //pero aquí es donde el usuario podrá ver y editar sus datos personales.
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // <-- PARA ABRIR LA GALERÍA
@@ -13,6 +15,8 @@ import 'admin_panel_screen.dart'; // <-- IMPORTAMOS LA PANTALLA DEL PANEL DE CON
 import 'upload_product_screen.dart';
 import 'my_products_screen.dart';
 import 'mis_ventas_screen.dart';
+import '../services/resena_service.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -47,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Solo cargamos pedidos si es cliente normal
       if (datos['rol'] == 'cliente') {
         pedidos = await _orderService.obtenerHistorialPedidos();
+        print('PEDIDOS: ${jsonEncode(pedidos)}');
       }
 
       if (mounted) {
@@ -232,6 +237,166 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _mostrarModalCalificacion(dynamic pedido) {
+    int _estrellasSeleccionadas = 0;
+    final comentarioController = TextEditingController();
+    bool _enviando = false;
+
+    // Sacamos la marca del primer producto del pedido
+    final productos = pedido['productos'] as List? ?? [];
+    String marcaId = '';
+    for (var item in productos) {
+      final prod = item['producto'];
+      if (prod != null && prod is Map && prod['marcaId'] != null) {
+        marcaId = prod['marcaId'].toString();
+        break;
+      }
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 24,
+                right: 24,
+                top: 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '¿Cómo fue tu experiencia? ⭐',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Tu opinión ayuda a otros compradores',
+                    style: TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Estrellas
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () => setModalState(
+                          () => _estrellasSeleccionadas = index + 1,
+                        ),
+                        child: Icon(
+                          index < _estrellasSeleccionadas
+                              ? Icons.star
+                              : Icons.star_outline,
+                          color: Colors.amber,
+                          size: 40,
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _estrellasSeleccionadas == 0
+                        ? 'Toca para calificar'
+                        : _estrellasSeleccionadas == 1
+                        ? 'Muy malo 😞'
+                        : _estrellasSeleccionadas == 2
+                        ? 'Malo 😕'
+                        : _estrellasSeleccionadas == 3
+                        ? 'Regular 😐'
+                        : _estrellasSeleccionadas == 4
+                        ? 'Bueno 😊'
+                        : 'Excelente 🔥',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _estrellasSeleccionadas == 0
+                          ? Colors.black38
+                          : Colors.amber.shade800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Comentario
+                  TextField(
+                    controller: comentarioController,
+                    maxLines: 3,
+                    maxLength: 300,
+                    decoration: const InputDecoration(
+                      labelText: 'Comentario (opcional)',
+                      hintText: 'Cuéntanos tu experiencia...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _enviando || _estrellasSeleccionadas == 0
+                          ? null
+                          : () async {
+                              setModalState(() => _enviando = true);
+                              try {
+                                await ResenaService().crearResena(
+                                  marcaId: marcaId,
+                                  pedidoId: pedido['_id'],
+                                  estrellas: _estrellasSeleccionadas,
+                                  comentario: comentarioController.text,
+                                );
+                                if (!mounted) return;
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      '¡Gracias por tu calificación! ⭐',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                                setState(() => _estaCargando = true);
+                                _cargarDatosCompletos();
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(e.toString()),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              } finally {
+                                setModalState(() => _enviando = false);
+                              }
+                            },
+                      child: _enviando
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'ENVIAR CALIFICACIÓN',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Color _obtenerColorEstado(String estado) {
     switch (estado.toLowerCase()) {
       case 'aprobado':
@@ -329,6 +494,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
+                      // Después del Container del estado agrega:
+                      if (estado.toLowerCase() == 'entregado')
+                        FutureBuilder<bool>(
+                          future: ResenaService().verificarResena(
+                            pedido['_id'],
+                          ),
+                          builder: (context, snapshot) {
+                            final yaCalifico = snapshot.data ?? false;
+                            if (yaCalifico) {
+                              return const Padding(
+                                padding: EdgeInsets.only(top: 8),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Ya calificaste este pedido',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.amber.shade800,
+                                  side: BorderSide(
+                                    color: Colors.amber.shade800,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.star_outline, size: 16),
+                                label: const Text(
+                                  'CALIFICAR VENDEDOR',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                onPressed: () =>
+                                    _mostrarModalCalificacion(pedido),
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -505,6 +720,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 15),
+                        //CALIFICACIÓN DEL VENDEDOR (solo visible si es marca)
+                        if (_datosUsuario?['rol'] == 'marca') ...[
+                          const SizedBox(height: 8),
+                          FutureBuilder<List<dynamic>>(
+                            future: ResenaService().obtenerResenasMarca(
+                              _datosUsuario?['_id'] ?? '',
+                            ),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return const Text(
+                                  'Sin calificaciones aún ⭐',
+                                  style: TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 13,
+                                  ),
+                                );
+                              }
+                              final resenas = snapshot.data!;
+                              final promedio =
+                                  resenas.fold<double>(
+                                    0,
+                                    (sum, r) => sum + (r['estrellas'] ?? 0),
+                                  ) /
+                                  resenas.length;
+                              return Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(5, (index) {
+                                      return Icon(
+                                        index < promedio.round()
+                                            ? Icons.star
+                                            : Icons.star_outline,
+                                        color: Colors.amber,
+                                        size: 20,
+                                      );
+                                    }),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${promedio.toStringAsFixed(1)} / 5.0  (${resenas.length} reseña${resenas.length == 1 ? '' : 's'})',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black54,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
 
                         // BOTÓN PARA ABRIR LA EDICIÓN
                         OutlinedButton.icon(
