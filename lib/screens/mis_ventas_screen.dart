@@ -52,10 +52,14 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
 
   Color _colorEstado(String estado) {
     switch (estado.toLowerCase()) {
-      case 'aprobado': return Colors.amber;
-      case 'rechazado': return Colors.red;
-      case 'entregado': return Colors.green;
-      default: return Colors.blue;
+      case 'aprobado':
+        return Colors.amber;
+      case 'rechazado':
+        return Colors.red;
+      case 'entregado':
+        return Colors.green;
+      default:
+        return Colors.blue;
     }
   }
 
@@ -83,7 +87,10 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MIS VENTAS 💰', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+        title: const Text(
+          'MIS VENTAS 💰',
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1.0),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -92,168 +99,303 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
       body: _estaCargando
           ? const Center(child: CircularProgressIndicator(color: Colors.black))
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _ventas.isEmpty
-                  ? const Center(
-                      child: Text('Aún no tienes ventas bro 💨',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _ventas.length,
-                      itemBuilder: (context, index) {
-                        final venta = _ventas[index];
-                        final estado = venta['estado'] ?? 'Pendiente Verificación';
-                        final fecha = venta['fechaCreacion'] != null
-                            ? DateTime.parse(venta['fechaCreacion']).toLocal().toString().split('.')[0]
-                            : 'Fecha desconocida';
+          ? Center(
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+            )
+          : _ventas.isEmpty
+          ? const Center(
+              child: Text(
+                'Aún no tienes ventas bro 💨',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _ventas.length,
+              itemBuilder: (context, index) {
+                final venta = _ventas[index];
+                final estado = venta['estado'] ?? 'Pendiente Verificación';
+                final fecha = venta['fechaCreacion'] != null
+                    ? DateTime.parse(
+                        venta['fechaCreacion'],
+                      ).toLocal().toString().split('.')[0]
+                    : 'Fecha desconocida';
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: Colors.black12),
-                            borderRadius: BorderRadius.circular(12),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.black12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      // Header
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _colorEstado(estado).withOpacity(0.1),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
                           ),
-                          child: Column(
-                            children: [
-                              // Header
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: _colorEstado(estado).withOpacity(0.1),
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Orden #${venta['_id'].toString().substring(18)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
                                 ),
+                                Text(
+                                  fecha,
+                                  style: const TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _colorEstado(estado),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                estado.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Info del comprador
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.person_outline,
+                                  size: 16,
+                                  color: Colors.black54,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  venta['correoComprador'] ?? '',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  size: 16,
+                                  color: Colors.black54,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    venta['direccionEnvio'] ?? '',
+                                    style: const TextStyle(fontSize: 13),
+                                    maxLines: 2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.phone_outlined,
+                                  size: 16,
+                                  color: Colors.black54,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  venta['telefonoComprador'] ?? '',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 20),
+
+                            // 👈 BOTÓN VER COMPROBANTE
+                            if (venta['comprobantePagoUrl'] != null &&
+                                venta['comprobantePagoUrl']
+                                    .toString()
+                                    .isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(15),
+                                        child: Image.network(
+                                          venta['comprobantePagoUrl'],
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Center(
+                                                child: Text(
+                                                  'No se pudo cargar el comprobante',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.blue.shade200,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.receipt_long,
+                                        size: 16,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Ver comprobante de pago',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.blue.shade700,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            const Divider(height: 20),
+
+                            // Productos
+                            ...((venta['productos'] as List? ?? []).map((item) {
+                              final prod = item['producto'];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Orden #${venta['_id'].toString().substring(18)}',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                        ),
-                                        Text(fecha, style: const TextStyle(color: Colors.black54, fontSize: 12)),
-                                      ],
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: _colorEstado(estado),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
+                                    Expanded(
                                       child: Text(
-                                        estado.toUpperCase(),
-                                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                        '${prod?['nombre'] ?? 'Producto'} - Talla ${item['talla']} x${item['cantidad']}',
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                    Text(
+                                      '\$${item['precio']}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
                                 ),
+                              );
+                            })),
+
+                            const Divider(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'TOTAL',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  '\$${venta['total']?.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Botones de acción
+                            if (estado == 'Pendiente Verificación')
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.amber,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      onPressed: () =>
+                                          _mostrarAccionesEstado(venta),
+                                      child: const Text(
+                                        'GESTIONAR',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-
-                              // Info del comprador
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.person_outline, size: 16, color: Colors.black54),
-                                        const SizedBox(width: 6),
-                                        Text(venta['correoComprador'] ?? '', style: const TextStyle(fontSize: 13)),
-                                      ],
+                            if (estado == 'Aprobado')
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () =>
+                                      _mostrarAccionesEstado(venta),
+                                  child: const Text(
+                                    'MARCAR ENTREGADO',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.location_on_outlined, size: 16, color: Colors.black54),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(venta['direccionEnvio'] ?? '',
-                                              style: const TextStyle(fontSize: 13), maxLines: 2),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.phone_outlined, size: 16, color: Colors.black54),
-                                        const SizedBox(width: 6),
-                                        Text(venta['telefonoComprador'] ?? '', style: const TextStyle(fontSize: 13)),
-                                      ],
-                                    ),
-                                    const Divider(height: 20),
-
-                                    // Productos
-                                    ...((venta['productos'] as List? ?? []).map((item) {
-                                      final prod = item['producto'];
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                '${prod?['nombre'] ?? 'Producto'} - Talla ${item['talla']} x${item['cantidad']}',
-                                                style: const TextStyle(fontSize: 13),
-                                              ),
-                                            ),
-                                            Text('\$${item['precio']}',
-                                                style: const TextStyle(fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                      );
-                                    })),
-
-                                    const Divider(height: 16),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('TOTAL', style: TextStyle(fontWeight: FontWeight.bold)),
-                                        Text('\$${venta['total']?.toStringAsFixed(2)}',
-                                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-
-                                    // Botones de acción
-                                    if (estado == 'Pendiente Verificación')
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.amber,
-                                                foregroundColor: Colors.white,
-                                              ),
-                                              onPressed: () => _mostrarAccionesEstado(venta),
-                                              child: const Text('GESTIONAR', style: TextStyle(fontWeight: FontWeight.bold)),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    if (estado == 'Aprobado')
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          onPressed: () => _mostrarAccionesEstado(venta),
-                                          child: const Text('MARCAR ENTREGADO', style: TextStyle(fontWeight: FontWeight.bold)),
-                                        ),
-                                      ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -283,7 +425,10 @@ class _ModalAccionesState extends State<_ModalAcciones> {
 
   Future<void> _seleccionarFoto() async {
     final picker = ImagePicker();
-    final foto = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final foto = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (foto != null) {
       final bytes = await foto.readAsBytes();
       setState(() {
@@ -301,7 +446,9 @@ class _ModalAccionesState extends State<_ModalAcciones> {
 
       var request = http.MultipartRequest(
         'PUT',
-        Uri.parse('http://localhost:4000/api/pedidos/${widget.venta['_id']}/estado'),
+        Uri.parse(
+          'http://localhost:4000/api/pedidos/${widget.venta['_id']}/estado',
+        ),
       );
 
       request.headers['x-auth-token'] = token ?? '';
@@ -314,16 +461,23 @@ class _ModalAccionesState extends State<_ModalAcciones> {
         request.fields['numeroRastreo'] = _rastreoController.text.trim();
       }
       if (_fotoEnvio != null && _fotoBytes != null) {
-        request.files.add(http.MultipartFile.fromBytes(
-          'fotoEnvio', _fotoBytes!, filename: _fotoEnvio!.name,
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'fotoEnvio',
+            _fotoBytes!,
+            filename: _fotoEnvio!.name,
+          ),
+        );
       }
 
       final response = await request.send();
       if (response.statusCode == 200) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pedido $nuevoEstado ✅'), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text('Pedido $nuevoEstado ✅'),
+            backgroundColor: Colors.green,
+          ),
         );
         widget.onActualizado();
       } else {
@@ -346,7 +500,9 @@ class _ModalAccionesState extends State<_ModalAcciones> {
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 24, right: 24, top: 24,
+        left: 24,
+        right: 24,
+        top: 24,
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -361,7 +517,10 @@ class _ModalAccionesState extends State<_ModalAcciones> {
 
             if (esPendiente) ...[
               // APROBADO
-              const Text('Número de rastreo', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Número de rastreo',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _rastreoController,
@@ -373,7 +532,10 @@ class _ModalAccionesState extends State<_ModalAcciones> {
               const SizedBox(height: 12),
 
               // Foto de envío
-              const Text('Foto del comprobante de envío (opcional)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Foto del comprobante de envío (opcional)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: _seleccionarFoto,
@@ -393,7 +555,10 @@ class _ModalAccionesState extends State<_ModalAcciones> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add_a_photo, color: Colors.black54),
-                            Text('Agregar foto', style: TextStyle(color: Colors.black54)),
+                            Text(
+                              'Agregar foto',
+                              style: TextStyle(color: Colors.black54),
+                            ),
                           ],
                         ),
                 ),
@@ -401,16 +566,27 @@ class _ModalAccionesState extends State<_ModalAcciones> {
               const SizedBox(height: 16),
 
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.white),
-                onPressed: _cargando ? null : () => _actualizarEstado('Aprobado'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _cargando
+                    ? null
+                    : () => _actualizarEstado('Aprobado'),
                 child: _cargando
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('✅ APROBAR PEDIDO', style: TextStyle(fontWeight: FontWeight.bold)),
+                    : const Text(
+                        '✅ APROBAR PEDIDO',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
               const SizedBox(height: 12),
 
               // RECHAZADO
-              const Text('Motivo de rechazo', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Motivo de rechazo',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _motivoController,
@@ -423,17 +599,28 @@ class _ModalAccionesState extends State<_ModalAcciones> {
               const SizedBox(height: 12),
 
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                onPressed: _cargando ? null : () {
-                  if (_motivoController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Escribe el motivo del rechazo 🛑'), backgroundColor: Colors.orange),
-                    );
-                    return;
-                  }
-                  _actualizarEstado('Rechazado');
-                },
-                child: const Text('❌ RECHAZAR PEDIDO', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _cargando
+                    ? null
+                    : () {
+                        if (_motivoController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Escribe el motivo del rechazo 🛑'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
+                        _actualizarEstado('Rechazado');
+                      },
+                child: const Text(
+                  '❌ RECHAZAR PEDIDO',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
 
@@ -445,11 +632,19 @@ class _ModalAccionesState extends State<_ModalAcciones> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                onPressed: _cargando ? null : () => _actualizarEstado('Entregado'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _cargando
+                    ? null
+                    : () => _actualizarEstado('Entregado'),
                 child: _cargando
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('📦 CONFIRMAR ENTREGA', style: TextStyle(fontWeight: FontWeight.bold)),
+                    : const Text(
+                        '📦 CONFIRMAR ENTREGA',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ],
 

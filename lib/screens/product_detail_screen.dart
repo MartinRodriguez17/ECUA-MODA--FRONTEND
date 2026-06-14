@@ -196,6 +196,54 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     },
                   ),
 
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+
+                  // --- INFO DEL PRODUCTO ---
+                  if (widget.producto['categoria'] != null &&
+                      widget.producto['categoria'].toString().isNotEmpty)
+                    _infoDetalle(
+                      Icons.category_outlined,
+                      'Categoría',
+                      widget.producto['categoria'].toString(),
+                    ),
+
+                  if (widget.producto['genero'] != null &&
+                      widget.producto['genero'].toString().isNotEmpty)
+                    _infoDetalle(
+                      Icons.wc_outlined,
+                      'Género',
+                      widget.producto['genero'].toString(),
+                    ),
+
+                  if (widget.producto['estilo'] != null &&
+                      widget.producto['estilo'].toString().isNotEmpty)
+                    _infoDetalle(
+                      Icons.style_outlined,
+                      'Estilo',
+                      widget.producto['estilo'].toString(),
+                    ),
+
+                  if (widget.producto['marca'] != null &&
+                      widget.producto['marca'].toString().isNotEmpty)
+                    _infoDetalle(
+                      Icons.storefront_outlined,
+                      'Marca',
+                      widget.producto['marca'].toString(),
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  // Descripción expandible
+                  if (widget.producto['descripcion'] != null &&
+                      widget.producto['descripcion'].toString().isNotEmpty)
+                    _DescripcionExpandible(
+                      descripcion: widget.producto['descripcion'].toString(),
+                    ),
+
+                  const SizedBox(height: 35),
+
                   // --- TALLAS REALES ---
                   const Text(
                     'SELECCIONA UNA TALLA',
@@ -365,6 +413,87 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _infoDetalle(IconData icono, String label, String valor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icono, size: 16, color: Colors.black54),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          Text(
+            valor,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DescripcionExpandible extends StatefulWidget {
+  final String descripcion;
+  const _DescripcionExpandible({required this.descripcion});
+
+  @override
+  State<_DescripcionExpandible> createState() => _DescripcionExpandibleState();
+}
+
+class _DescripcionExpandibleState extends State<_DescripcionExpandible> {
+  bool _expandido = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _expandido = !_expandido),
+          child: Row(
+            children: [
+              Text(
+                _expandido ? 'Ocultar descripción' : 'Saber más',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                _expandido
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 250),
+          crossFadeState: _expandido
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              widget.descripcion,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
