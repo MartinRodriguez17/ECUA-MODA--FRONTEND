@@ -17,7 +17,6 @@ import 'my_products_screen.dart';
 import 'mis_ventas_screen.dart';
 import '../services/resena_service.dart';
 
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -103,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -255,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -412,11 +411,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildHistorialPedidos() {
     return _misPedidos.isEmpty
-        ? const Center(
+        ? Center(
             child: Text(
               'Aún no has comprado nada bro 💨',
               style: TextStyle(
-                color: Colors.black54,
+                color: Theme.of(context).textTheme.bodySmall?.color,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -593,8 +592,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 50,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.black),
+                foregroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+                side: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -619,8 +624,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 50,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.black),
+                foregroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+                side: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -655,9 +666,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1.0),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.red),
@@ -689,15 +700,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // EL AVATAR CON LA FOTO REAL DE CLOUDINARY
                         CircleAvatar(
                           radius: 50,
-                          backgroundColor: Colors.black12,
+                          backgroundColor:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white24
+                              : Colors.black12,
                           backgroundImage: fotoUrl.isNotEmpty
                               ? NetworkImage(fotoUrl)
                               : null,
                           child: fotoUrl.isEmpty
-                              ? const Icon(
+                              ? Icon(
                                   Icons.person,
                                   size: 50,
-                                  color: Colors.black,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
                                 )
                               : null,
                         ),
@@ -714,8 +732,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Text(
                           _datosUsuario?['email'] ?? 'correo@ejemplo.com',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.black54,
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                             fontSize: 14,
                           ),
                         ),
@@ -729,10 +747,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             builder: (context, snapshot) {
                               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                return const Text(
+                                return Text(
                                   'Sin calificaciones aún ⭐',
                                   style: TextStyle(
-                                    color: Colors.black54,
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
                                     fontSize: 13,
                                   ),
                                 );
@@ -761,9 +779,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     '${promedio.toStringAsFixed(1)} / 5.0  (${resenas.length} reseña${resenas.length == 1 ? '' : 's'})',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black54,
+                                      color: Theme.of(context).textTheme.bodySmall?.color,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -779,8 +797,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: const Icon(Icons.edit, size: 18),
                           label: const Text('Editar Perfil'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.black,
-                            side: const BorderSide(color: Colors.black),
+                            foregroundColor:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                            side: BorderSide(
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -815,7 +842,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
 
                         const SizedBox(height: 20),
-                        const Divider(thickness: 1, color: Colors.black12),
+                        Divider(
+                          thickness: 1,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white12
+                              : Colors.black12,
+                        ),
                         const SizedBox(height: 10),
                         // Contenido según el rol
                         if (_datosUsuario?['rol'] == 'cliente') ...[

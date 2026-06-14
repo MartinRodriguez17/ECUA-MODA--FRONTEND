@@ -261,9 +261,9 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -536,8 +536,8 @@ class _UploadProductScreenState extends State<UploadProductScreen> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            border: Border.all(color: Colors.black12),
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            border: Border.all(color: Theme.of(context).dividerColor),
                             borderRadius: const BorderRadius.only(
                               bottomLeft: Radius.circular(8),
                               bottomRight: Radius.circular(8),

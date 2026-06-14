@@ -92,9 +92,9 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1.0),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
       body: _estaCargando
           ? const Center(child: CircularProgressIndicator(color: Colors.black))
@@ -124,7 +124,7 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     border: Border.all(color: Colors.black12),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -191,10 +191,10 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.person_outline,
                                   size: 16,
-                                  color: Colors.black54,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -206,10 +206,10 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                             const SizedBox(height: 6),
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.location_on_outlined,
                                   size: 16,
-                                  color: Colors.black54,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
@@ -224,10 +224,10 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                             const SizedBox(height: 6),
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.phone_outlined,
                                   size: 16,
-                                  color: Colors.black54,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(

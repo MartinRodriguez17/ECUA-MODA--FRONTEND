@@ -10,6 +10,8 @@ import '../services/cart_provider.dart';
 import 'cart_screen.dart';
 import 'upload_product_screen.dart'; // Esta será tu nueva pantalla
 import 'admin_login_screen.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0.5,
         leadingWidth: 56,
         leading: GestureDetector(
@@ -128,8 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onChanged: _filtrarProductos,
                 decoration: InputDecoration(
                   hintText: 'Buscar ropa, marca...',
-                  hintStyle: const TextStyle(
-                    color: Colors.black38,
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).hintColor,
                     fontSize: 14,
                   ),
                   border: OutlineInputBorder(
@@ -137,7 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[100],
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 0,
@@ -152,8 +156,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
         centerTitle: true,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              return IconButton(
+                icon: Icon(
+                  themeProvider.isDark
+                      ? Icons.wb_sunny_outlined
+                      : Icons.nightlight_round,
+                ),
+                onPressed: () => themeProvider.toggleTema(),
+              );
+            },
+          ),
           _buscandoActivo
               ? IconButton(
                   icon: const Icon(Icons.close),
@@ -180,17 +196,21 @@ class _HomeScreenState extends State<HomeScreen> {
       // Solo aparece si miRol es exactamente 'marca' o 'admin'
       floatingActionButton: (miRol == 'marca' || miRol == 'admin')
           ? FloatingActionButton(
-              backgroundColor: Colors.black,
-              child: const Icon(Icons.add_a_photo, color: Colors.white),
-              onPressed: () {
-                // Viajamos a la pantalla de subir producto (la crearemos después)
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const UploadProductScreen(),
-                  ),
-                );
-              },
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+              child: Icon(
+                Icons.add_a_photo,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white,
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UploadProductScreen(),
+                ),
+              ),
             )
           : null, // Si es un cliente normal, el botón no existe.
 
@@ -262,7 +282,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[800]
+                                : Colors.grey[200],
                             image: DecorationImage(
                               image: NetworkImage(urlImagen),
                               fit: BoxFit.cover,
@@ -283,9 +306,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '\$${producto['precio']?.toString() ?? '0.00'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Colors.black54,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

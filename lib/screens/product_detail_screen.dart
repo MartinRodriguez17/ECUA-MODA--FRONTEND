@@ -46,9 +46,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -185,9 +185,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           const SizedBox(width: 6),
                           Text(
                             '${promedio.toStringAsFixed(1)} (${resenas.length})',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Colors.black54,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -421,11 +423,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icono, size: 16, color: Colors.black54),
+          Icon(
+            icono,
+            size: 16,
+            color: Theme.of(context).textTheme.bodySmall?.color,
+          ),
           const SizedBox(width: 8),
           Text(
             '$label: ',
-            style: const TextStyle(fontSize: 13, color: Colors.black54),
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
           ),
           Text(
             valor,
@@ -459,10 +468,13 @@ class _DescripcionExpandibleState extends State<_DescripcionExpandible> {
             children: [
               Text(
                 _expandido ? 'Ocultar descripción' : 'Saber más',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   decoration: TextDecoration.underline,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
                 ),
               ),
               const SizedBox(width: 4),
@@ -471,6 +483,9 @@ class _DescripcionExpandibleState extends State<_DescripcionExpandible> {
                     ? Icons.keyboard_arrow_up
                     : Icons.keyboard_arrow_down,
                 size: 18,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
               ),
             ],
           ),
@@ -485,9 +500,11 @@ class _DescripcionExpandibleState extends State<_DescripcionExpandible> {
             padding: const EdgeInsets.only(top: 10),
             child: Text(
               widget.descripcion,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black87,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : Colors.black87,
                 height: 1.5,
               ),
             ),

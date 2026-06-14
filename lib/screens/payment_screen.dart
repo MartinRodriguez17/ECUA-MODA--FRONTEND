@@ -113,9 +113,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       appBar: AppBar(
         title: const Text('PAGO SEGURO 🔒', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1.0)),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
