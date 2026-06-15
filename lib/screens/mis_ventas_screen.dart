@@ -68,7 +68,9 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor:
+          Theme.of(context).bottomSheetTheme.backgroundColor ??
+          Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -194,7 +196,9 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                                 Icon(
                                   Icons.person_outline,
                                   size: 16,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -209,7 +213,9 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                                 Icon(
                                   Icons.location_on_outlined,
                                   size: 16,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
@@ -227,7 +233,9 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                                 Icon(
                                   Icons.phone_outlined,
                                   size: 16,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
