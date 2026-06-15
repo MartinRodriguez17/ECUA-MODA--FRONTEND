@@ -50,7 +50,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       for (var p in pedidos) {
         String est = p['estado']?.toString().toLowerCase() ?? '';
         double total = (p['total'] ?? 0).toDouble();
-        if (est.contains('aprobado') || est.contains('completado') || est.contains('entregado')) {
+        if (est.contains('aprobado') ||
+            est.contains('completado') ||
+            est.contains('entregado')) {
           sumTotalVendido += total;
         }
       }
@@ -603,9 +605,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                                   children: [
                                     // BLOQUEAR
                                     if (estado != 'bloqueado' &&
+                                        estado != 'Bloqueada' &&
                                         estado != 'suspendido' &&
+                                        estado != 'Suspendida' &&
                                         estado != 'baneado' &&
-                                        estado != 'Suspendida')
+                                        estado != 'Rechazada')
                                       Expanded(
                                         child: OutlinedButton(
                                           style: OutlinedButton.styleFrom(
@@ -632,8 +636,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                                     const SizedBox(width: 6),
                                     // SUSPENDER
                                     if (estado != 'suspendido' &&
+                                        estado != 'Suspendida' &&
                                         estado != 'baneado' &&
-                                        estado != 'Suspendida')
+                                        estado != 'Rechazada')
                                       Expanded(
                                         child: OutlinedButton(
                                           style: OutlinedButton.styleFrom(
@@ -686,9 +691,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                                       ),
                                     // REACTIVAR
                                     if (estado == 'bloqueado' ||
+                                        estado == 'Bloqueada' ||
                                         estado == 'suspendido' ||
-                                        estado == 'baneado' ||
                                         estado == 'Suspendida' ||
+                                        estado == 'baneado' ||
                                         estado == 'Rechazada')
                                       Expanded(
                                         child: ElevatedButton(
@@ -750,6 +756,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       case 'aceptada':
         return Colors.green;
       case 'bloqueado':
+      case 'bloqueada':  
         return Colors.orange;
       case 'suspendido':
       case 'suspendida':

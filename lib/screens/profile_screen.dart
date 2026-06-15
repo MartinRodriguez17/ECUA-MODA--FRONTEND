@@ -449,9 +449,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Text(
                             'Orden #${pedido['_id'].toString().substring(18)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.black54,
+                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.54),
                             ),
                           ),
                           Text(
@@ -502,7 +502,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           builder: (context, snapshot) {
                             final yaCalifico = snapshot.data ?? false;
                             if (yaCalifico) {
-                              return const Padding(
+                              return Padding(
                                 padding: EdgeInsets.only(top: 8),
                                 child: Row(
                                   children: [
@@ -516,7 +516,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       'Ya calificaste este pedido',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.black54,
+                                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.54),
                                       ),
                                     ),
                                   ],

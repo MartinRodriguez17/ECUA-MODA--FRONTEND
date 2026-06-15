@@ -145,7 +145,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       // 👈 IconButton, no Icon
                       icon: Icon(
                         _verPassword ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.black54,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white54
+                            : Colors.black54,
                       ),
                       onPressed: () {
                         // 👈 onPressed va aquí dentro
@@ -182,9 +184,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       builder: (_) => const ForgotPasswordScreen(),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     '¿Olvidaste tu contraseña?',
-                    style: TextStyle(color: Colors.black54),
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white54
+                          : Colors.black54,
+                    ),
                   ),
                 ),
 
@@ -198,19 +204,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                  child: const Text(
+                  child: Text(
                     'CREAR CUENTA NUEVA',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                       fontWeight: FontWeight.bold,
                       decoration: TextDecoration.underline,
+                      decorationColor:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                     ),
                   ),
                 ),
                 const SizedBox(height: 30),
 
                 // --- NUEVA SECCIÓN PARA VENDEDORES ---
-                const Row(
+                Row(
                   children: [
                     Expanded(child: Divider(color: Colors.black26)),
                     Padding(
@@ -218,12 +230,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'O',
                         style: TextStyle(
-                          color: Colors.black54,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white54
+                              : Colors.black54,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    Expanded(child: Divider(color: Colors.black26)),
+                    Expanded(
+                      child: Divider(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white24
+                            : Colors.black26,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -237,11 +257,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.storefront, color: Colors.black),
-                  label: const Text(
+                  icon: Icon(
+                    Icons.storefront,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                  label: Text(
                     '¿Eres una marca? Vende aquí.',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                       fontWeight: FontWeight.w900,
                     ),
                   ),

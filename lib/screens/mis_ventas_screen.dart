@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import 'dart:typed_data';
-
 class MisVentasScreen extends StatefulWidget {
   const MisVentasScreen({super.key});
 
@@ -17,11 +16,13 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
   List<dynamic> _ventas = [];
   bool _estaCargando = true;
   String? _error;
+  String _estadoCuenta = 'activo';
 
   @override
   void initState() {
     super.initState();
     _cargarVentas();
+    _cargarEstadoCuenta();
   }
 
   Future<void> _cargarVentas() async {
@@ -47,6 +48,27 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
         _error = e.toString();
         _estaCargando = false;
       });
+    }
+  }
+
+  Future<void> _cargarEstadoCuenta() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('jwt_token');
+      final response = await http.get(
+        Uri.parse('http://localhost:4000/api/auth/perfil'),
+        headers: {'x-auth-token': token ?? ''},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _estadoCuenta = data['estadoCuenta'] ?? 'activo';
+          });
+        }
+      }
+    } catch (e) {
+      // silencioso
     }
   }
 
@@ -357,45 +379,80 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
                             const SizedBox(height: 12),
 
                             // Botones de acción
-                            if (estado == 'Pendiente Verificación')
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.amber,
-                                        foregroundColor: Colors.white,
+                            // Si está bloqueado, solo ve la info pero no puede gestionar
+                            if (_estadoCuenta == 'bloqueado' ||
+                                _estadoCuenta == 'Bloqueada')
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.orange),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.lock_outline,
+                                      color: Colors.orange,
+                                      size: 16,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Cuenta bloqueada — no puedes gestionar pedidos',
+                                      style: TextStyle(
+                                        color: Colors.orange,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      onPressed: () =>
-                                          _mostrarAccionesEstado(venta),
-                                      child: const Text(
-                                        'GESTIONAR',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else ...[
+                              if (estado == 'Pendiente Verificación')
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.amber,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () =>
+                                            _mostrarAccionesEstado(venta),
+                                        child: const Text(
+                                          'GESTIONAR',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            if (estado == 'Aprobado')
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  onPressed: () =>
-                                      _mostrarAccionesEstado(venta),
-                                  child: const Text(
-                                    'MARCAR ENTREGADO',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                  ],
+                                ),
+                              if (estado == 'Aprobado')
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    onPressed: () =>
+                                        _mostrarAccionesEstado(venta),
+                                    child: const Text(
+                                      'MARCAR ENTREGADO',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                            ],
                           ],
                         ),
                       ),
