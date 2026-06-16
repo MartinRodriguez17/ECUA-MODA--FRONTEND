@@ -756,7 +756,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       case 'aceptada':
         return Colors.green;
       case 'bloqueado':
-      case 'bloqueada':  
+      case 'bloqueada':
         return Colors.orange;
       case 'suspendido':
       case 'suspendida':

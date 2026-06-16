@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import 'dart:typed_data';
+
 class MisVentasScreen extends StatefulWidget {
   const MisVentasScreen({super.key});
 
@@ -126,340 +127,433 @@ class _MisVentasScreenState extends State<MisVentasScreen> {
           ? Center(
               child: Text(_error!, style: const TextStyle(color: Colors.red)),
             )
-          : _ventas.isEmpty
-          ? const Center(
-              child: Text(
-                'Aún no tienes ventas bro 💨',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _ventas.length,
-              itemBuilder: (context, index) {
-                final venta = _ventas[index];
-                final estado = venta['estado'] ?? 'Pendiente Verificación';
-                final fecha = venta['fechaCreacion'] != null
-                    ? DateTime.parse(
-                        venta['fechaCreacion'],
-                      ).toLocal().toString().split('.')[0]
-                    : 'Fecha desconocida';
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    border: Border.all(color: Colors.black12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      // Header
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: _colorEstado(estado).withOpacity(0.1),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
+          : Column(
+              children: [
+                // 👈 BANNER DE BLOQUEO
+                if (_estadoCuenta == 'bloqueado' ||
+                    _estadoCuenta == 'Bloqueada')
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    color: Colors.orange.shade100,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.lock_outline,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Tu cuenta está bloqueada. Puedes ver tus ventas pero no puedes gestionarlas.',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Orden #${venta['_id'].toString().substring(18)}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                Text(
-                                  fecha,
-                                  style: const TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: _ventas.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aún no tienes ventas bro 💨',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _ventas.length,
+                          itemBuilder: (context, index) {
+                            final venta = _ventas[index];
+                            final estado =
+                                venta['estado'] ?? 'Pendiente Verificación';
+                            final fecha = venta['fechaCreacion'] != null
+                                ? DateTime.parse(
+                                    venta['fechaCreacion'],
+                                  ).toLocal().toString().split('.')[0]
+                                : 'Fecha desconocida';
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                color: _colorEstado(estado),
-                                borderRadius: BorderRadius.circular(20),
+                                color: Theme.of(context).cardColor,
+                                border: Border.all(color: Colors.black12),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Text(
-                                estado.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Info del comprador
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.person_outline,
-                                  size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  venta['correoComprador'] ?? '',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    venta['direccionEnvio'] ?? '',
-                                    style: const TextStyle(fontSize: 13),
-                                    maxLines: 2,
+                              child: Column(
+                                children: [
+                                  // Header
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: _colorEstado(
+                                        estado,
+                                      ).withOpacity(0.1),
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Orden #${venta['_id'].toString().substring(18)}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            Text(
+                                              fecha,
+                                              style: const TextStyle(
+                                                color: Colors.black54,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: _colorEstado(estado),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            estado.toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.phone_outlined,
-                                  size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  venta['telefonoComprador'] ?? '',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 20),
 
-                            // 👈 BOTÓN VER COMPROBANTE
-                            if (venta['comprobantePagoUrl'] != null &&
-                                venta['comprobantePagoUrl']
-                                    .toString()
-                                    .isNotEmpty)
-                              GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => Dialog(
-                                      backgroundColor: Colors.transparent,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(15),
-                                        child: Image.network(
-                                          venta['comprobantePagoUrl'],
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Center(
-                                                child: Text(
-                                                  'No se pudo cargar el comprobante',
+                                  // Info del comprador
+                                  Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.person_outline,
+                                              size: 16,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              venta['correoComprador'] ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.location_on_outlined,
+                                              size: 16,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                venta['direccionEnvio'] ?? '',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                                maxLines: 2,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.phone_outlined,
+                                              size: 16,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              venta['telefonoComprador'] ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const Divider(height: 20),
+
+                                        // 👈 BOTÓN VER COMPROBANTE
+                                        if (venta['comprobantePagoUrl'] !=
+                                                null &&
+                                            venta['comprobantePagoUrl']
+                                                .toString()
+                                                .isNotEmpty)
+                                          GestureDetector(
+                                            onTap: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (_) => Dialog(
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          15,
+                                                        ),
+                                                    child: Image.network(
+                                                      venta['comprobantePagoUrl'],
+                                                      fit: BoxFit.contain,
+                                                      errorBuilder:
+                                                          (
+                                                            _,
+                                                            __,
+                                                            ___,
+                                                          ) => const Center(
+                                                            child: Text(
+                                                              'No se pudo cargar el comprobante',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.shade50,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: Colors.blue.shade200,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.receipt_long,
+                                                    size: 16,
+                                                    color: Colors.blue.shade700,
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    'Ver comprobante de pago',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color:
+                                                          Colors.blue.shade700,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        const Divider(height: 20),
+
+                                        // Productos
+                                        ...((venta['productos'] as List? ?? [])
+                                            .map((item) {
+                                              final prod = item['producto'];
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 8,
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        '${prod?['nombre'] ?? 'Producto'} - Talla ${item['talla']} x${item['cantidad']}',
+                                                        style: const TextStyle(
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      '\$${item['precio']}',
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            })),
+
+                                        const Divider(height: 16),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Text(
+                                              'TOTAL',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              '\$${venta['total']?.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+
+                                        // Botones de acción
+                                        // Si está bloqueado, solo ve la info pero no puede gestionar
+                                        if (_estadoCuenta == 'bloqueado' ||
+                                            _estadoCuenta == 'Bloqueada')
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.orange.withOpacity(
+                                                0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.orange,
+                                              ),
+                                            ),
+                                            child: const Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.lock_outline,
+                                                  color: Colors.orange,
+                                                  size: 16,
+                                                ),
+                                                SizedBox(width: 6),
+                                                Text(
+                                                  'Cuenta bloqueada — no puedes gestionar pedidos',
                                                   style: TextStyle(
-                                                    color: Colors.white,
+                                                    color: Colors.orange,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        else ...[
+                                          if (estado ==
+                                              'Pendiente Verificación')
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: ElevatedButton(
+                                                    style:
+                                                        ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              Colors.amber,
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                        ),
+                                                    onPressed: () =>
+                                                        _mostrarAccionesEstado(
+                                                          venta,
+                                                        ),
+                                                    child: const Text(
+                                                      'GESTIONAR',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          if (estado == 'Aprobado')
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.green,
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                                onPressed: () =>
+                                                    _mostrarAccionesEstado(
+                                                      venta,
+                                                    ),
+                                                child: const Text(
+                                                  'MARCAR ENTREGADO',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.blue.shade200,
+                                            ),
+                                        ],
+                                      ],
                                     ),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.receipt_long,
-                                        size: 16,
-                                        color: Colors.blue.shade700,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Ver comprobante de pago',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.blue.shade700,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
-                            const Divider(height: 20),
-
-                            // Productos
-                            ...((venta['productos'] as List? ?? []).map((item) {
-                              final prod = item['producto'];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${prod?['nombre'] ?? 'Producto'} - Talla ${item['talla']} x${item['cantidad']}',
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                    ),
-                                    Text(
-                                      '\$${item['precio']}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            })),
-
-                            const Divider(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'TOTAL',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  '\$${venta['total']?.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Botones de acción
-                            // Si está bloqueado, solo ve la info pero no puede gestionar
-                            if (_estadoCuenta == 'bloqueado' ||
-                                _estadoCuenta == 'Bloqueada')
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.lock_outline,
-                                      color: Colors.orange,
-                                      size: 16,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Cuenta bloqueada — no puedes gestionar pedidos',
-                                      style: TextStyle(
-                                        color: Colors.orange,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            else ...[
-                              if (estado == 'Pendiente Verificación')
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.amber,
-                                          foregroundColor: Colors.white,
-                                        ),
-                                        onPressed: () =>
-                                            _mostrarAccionesEstado(venta),
-                                        child: const Text(
-                                          'GESTIONAR',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              if (estado == 'Aprobado')
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                    onPressed: () =>
-                                        _mostrarAccionesEstado(venta),
-                                    child: const Text(
-                                      'MARCAR ENTREGADO',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ],
+                            );
+                          },
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                ),
+              ],
             ),
     );
   }
