@@ -5,12 +5,14 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:jwt_decoder/jwt_decoder.dart'; 
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:typed_data'; // <-- PARA MANEJAR LOS BYTES DE LA IMAGEN EN EL PERFIL
+
 class AuthService {
   final String _urlLogin = 'http://localhost:4000/api/auth/login';
   final String _urlRegistro = 'http://localhost:4000/api/auth/registrar';
-  final String _urlOtp = 'http://localhost:4000/api/auth/enviar-otp'; // <-- NUEVA RUTA
+  final String _urlOtp =
+      'http://localhost:4000/api/auth/enviar-otp'; // <-- NUEVA RUTA
 
   Future<String> login(String email, String password) async {
     try {
@@ -25,7 +27,7 @@ class AuthService {
       if (response.statusCode == 200) {
         String token = data['token'];
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-        String rol = decodedToken['usuario']['rol']; 
+        String rol = decodedToken['usuario']['rol'];
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('jwt_token', token);
@@ -51,7 +53,7 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        return; 
+        return;
       } else {
         final errorData = jsonDecode(response.body);
         throw errorData['msg'] ?? 'Error al pedir código';
@@ -63,7 +65,12 @@ class AuthService {
   }
 
   // --- FUNCIÓN REGISTRAR ACTUALIZADA (AHORA EXIGE CÓDIGO) ---
-  Future<String> registrar(String nombre, String email, String password, String codigoOtp) async {
+  Future<String> registrar(
+    String nombre,
+    String email,
+    String password,
+    String codigoOtp,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse(_urlRegistro),
@@ -101,12 +108,11 @@ class AuthService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_rol');
   }
-  
 
   // --- NUEVA FUNCIÓN: OBTENER LOS DATOS REALES DEL PERFIL ---
   Future<Map<String, dynamic>> obtenerDatosPerfil() async {
     final String urlPerfil = 'http://localhost:4000/api/auth/perfil';
-    
+
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('jwt_token');
@@ -135,9 +141,13 @@ class AuthService {
   }
 
   // --- NUEVA FUNCIÓN: ACTUALIZAR PERFIL (FOTO Y NOMBRE) ---
-  Future<void> actualizarPerfil({String? nombre, Uint8List? fotoBytes, String? nombreArchivo}) async {
+  Future<void> actualizarPerfil({
+    String? nombre,
+    Uint8List? fotoBytes,
+    String? nombreArchivo,
+  }) async {
     final String urlActualizar = 'http://localhost:4000/api/auth/perfil';
-    
+
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('jwt_token');
@@ -145,7 +155,7 @@ class AuthService {
       if (token == null) throw 'No tienes sesión activa bro';
 
       var request = http.MultipartRequest('PUT', Uri.parse(urlActualizar));
-      
+
       // Le mandamos tu Pase VIP al guardia
       request.headers['x-auth-token'] = token;
 
@@ -166,7 +176,7 @@ class AuthService {
 
       // Disparamos el misil a Node.js
       var response = await request.send();
-      
+
       if (response.statusCode == 200) {
         return; // ¡Éxito bro!
       } else {
@@ -182,40 +192,90 @@ class AuthService {
 
   // RECUPERACION DE CONTRASEÑA
   Future<void> solicitarCodigoRecuperacion(String email) async {
-  try {
-    final response = await http.post(
-      Uri.parse('http://localhost:4000/api/auth/recuperar-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
-    );
-    final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw data['msg'] ?? 'Error al enviar el código';
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:4000/api/auth/recuperar-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        throw data['msg'] ?? 'Error al enviar el código';
+      }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión con el servidor';
     }
-  } catch (e) {
-    if (e is String) throw e;
-    throw 'Error de conexión con el servidor';
   }
-}
 
-Future<void> restablecerPassword(String email, String codigo, String nuevaPassword) async {
-  try {
-    final response = await http.post(
-      Uri.parse('http://localhost:4000/api/auth/restablecer-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'codigoOtp': codigo,
-        'nuevaPassword': nuevaPassword,
-      }),
-    );
-    final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw data['msg'] ?? 'Error al restablecer la contraseña';
+  Future<void> restablecerPassword(
+    String email,
+    String codigo,
+    String nuevaPassword,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:4000/api/auth/restablecer-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'codigoOtp': codigo,
+          'nuevaPassword': nuevaPassword,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        throw data['msg'] ?? 'Error al restablecer la contraseña';
+      }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión con el servidor';
     }
-  } catch (e) {
-    if (e is String) throw e;
-    throw 'Error de conexión con el servidor';
   }
-}
+
+  // RECUPERAR CONTRASEÑA MARCA
+  Future<void> solicitarCodigoRecuperacionMarca(
+    String correo,
+    String ruc,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:4000/api/auth/recuperar-password-marca'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'correo': correo, 'ruc': ruc}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        throw data['msg'] ?? 'Error al enviar el código';
+      }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión con el servidor';
+    }
+  }
+  
+  Future<void> restablecerPasswordMarca(
+    String correo,
+    String codigo,
+    String nuevaPassword,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:4000/api/auth/restablecer-password-marca'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'correo': correo,
+          'codigoOtp': codigo,
+          'nuevaPassword': nuevaPassword,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        throw data['msg'] ?? 'Error al restablecer la contraseña';
+      }
+    } catch (e) {
+      if (e is String) throw e;
+      throw 'Error de conexión con el servidor';
+    }
+  }
 }
